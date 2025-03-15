@@ -2,12 +2,21 @@ const { bot } = require("../bot");
 const User = require("../../model/user");
 const { adminKeyboard, userKeyboard } = require("../menu/keyboard");
 const Category = require("../../model/category");
+const Product = require("../../model/product");
 
-get_all_categories = async  (chatId, page = 1) => {
+get_all_categories = async (chatId, page = 1) => {
   let user = await User.findOne({ chatId }).lean();
   let limit = 5;
   let skip = (page - 1) * limit;
   let categories = await Category.find().skip(skip).limit(limit).lean();
+
+  if (page == 1) {
+    await User.findByIdAndUpdate(
+      user._id,
+      { ...user, action: "cateogory-1" },
+      { new: true }
+    );
+  }
 
   console.log(categories);
 
@@ -27,15 +36,15 @@ get_all_categories = async  (chatId, page = 1) => {
         [
           {
             text: "Ortga",
-            callback_data: "back_category",
+            callback_data: page > 1 ? "back_category" : page,
           },
           {
-            text: "1",
+            text: page,
             callback_data: "0",
           },
           {
             text: "Keyingisi",
-            callback_data: "next_category",
+            callback_data: limit == categories.length ? "next_category" : page,
           },
         ],
         user.admin
@@ -95,7 +104,7 @@ const pagination_category = async (chatId, action) => {
   let page = 1;
   if (user.action.includes("category-")) {
     page = +user.action.split("-")[1];
-    if (action === "back_category" && page > 1) {
+    if (action == "back_category" && page > 1) {
       page--;
     }
   }
@@ -110,11 +119,71 @@ const pagination_category = async (chatId, action) => {
   get_all_categories(chatId, page);
 };
 
+const show_category = async (chatId, id, page = 1) => {
+  let cateogry = await Category.findById(id).lean();
+  let user = await User.findOne({ chatId }).lean();
+  let limit = 5;
+  let skip = (page - 1) * limit;
+  let products = await Product.find({ category: cateogry._id })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+  let list = products.map((product) => [
+    {
+      text: product.title,
+      callback_data: `product_${product._id}`,
+    },
+  ]);
+  const userKeyboards = [];
+  const adminKeyboards = [
+    [
+      {
+        text: "Yangi mahsulot qo`shish",
+        callback_data: `add_product_${cateogry._id}`,
+      },
+    ],
+    [
+      {
+        text: "Turkumni tahrirlash",
+        callback_data: `edit_category-${cateogry._id}`,
+      }
+    ],
+  ];
+  const keyboards = user.admin ? adminKeyboards : userKeyboards;
+
+  bot.sendMessage(
+    chatId,
+    `${cateogry.title} turkumidagi mahsulotlar ro'yhati`,
+    {
+      reply_markup: {
+        remove_keyboard: true,
+        inline_keyboard: [
+          ...list,
+          [
+            {
+              text: "Ortga",
+              callback_data: page > 1 ? "back_product" : page,
+            },
+            {
+              text: page,
+              callback_data: "0",
+            },
+            {
+              text: "Keyingisi",
+              callback_data: limit == products.length ? "next_product" : page,
+            },
+          ],
+          ...keyboards,
+        ],
+      },
+    }
+  );
+};
+
 module.exports = {
   get_all_categories,
   add_category,
   new_category,
   pagination_category,
+  show_category,
 };
-
-// 4:18
