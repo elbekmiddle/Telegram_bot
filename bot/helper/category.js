@@ -10,6 +10,17 @@ get_all_categories = async (chatId, page = 1) => {
   let skip = (page - 1) * limit;
   let categories = await Category.find().skip(skip).limit(limit).lean();
 
+  if (categories.length == 0) {
+    page--;
+    get_all_categories(chatId, page - 1);
+    await User.findByIdAndUpdate(
+      user._id,
+      {...user, action: `category-${page}`},
+      {new: true}
+    );
+    return;
+  }
+
   if (page == 1) {
     await User.findByIdAndUpdate(
       user._id,
@@ -122,6 +133,11 @@ const pagination_category = async (chatId, action) => {
 const show_category = async (chatId, id, page = 1) => {
   let cateogry = await Category.findById(id).lean();
   let user = await User.findOne({ chatId }).lean();
+  await User.findByIdAndUpdate(
+    user._id,
+    { ...user, aciton: `category_${cateogry._id}` },
+    { new: true }
+  );
   let limit = 5;
   let skip = (page - 1) * limit;
   let products = await Product.find({ category: cateogry._id })
@@ -146,7 +162,11 @@ const show_category = async (chatId, id, page = 1) => {
       {
         text: "Turkumni tahrirlash",
         callback_data: `edit_category-${cateogry._id}`,
-      }
+      },
+      {
+        text: "Turkumni o`chirish",
+        callback_data: `del_category-${cateogry._id}`,
+      },
     ],
   ];
   const keyboards = user.admin ? adminKeyboards : userKeyboards;
@@ -179,6 +199,55 @@ const show_category = async (chatId, id, page = 1) => {
     }
   );
 };
+const remove_category = async (chatId, id) => {
+  let user = await User.findOne({ chatId }).lean();
+  let category = await Category.findById(id).lean();
+  if (user.action !== "del_category") {
+    await User.findByIdAndUpdate(
+      user._id,
+      { ...user, action: "del_category" },
+      { new: true }
+    );
+    bot.sendMessage(
+      chatId,
+      `Siz ${category.title} turkumini o'chirmoqchimisiz. Qaroringiz qatiymi?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Bekor qilish ❌",
+                callback_data: `category_${category._id}`,
+              },
+              {
+                text: "O`chirish ✅",
+                callback_data: `del_category-${category._id}`,
+              },
+            ],
+          ],
+        },
+      }
+    );
+  } else {
+    let products = await Product.find({ category: category._id })
+      .select(["_id"])
+      .lean();
+
+    await Promise.all(
+      products.map(async (product) => {
+        await Product.findByIdAndRemove(product._id);
+      })
+    );
+    // await Category.findByIdAndRemove(id)
+    await Category.findByIdAndDelete(id);
+
+    bot.sendMessage(chatId, `${category.title} turkumi o'chirildi!`);
+  }
+};
+
+const edit_category = async(chatId, id) => {
+  let user = await User.findOne({chatId}).lean() 
+}
 
 module.exports = {
   get_all_categories,
@@ -186,4 +255,6 @@ module.exports = {
   new_category,
   pagination_category,
   show_category,
+  remove_category,
+  edit_category
 };
