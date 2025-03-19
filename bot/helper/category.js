@@ -12,12 +12,12 @@ get_all_categories = async (chatId, page = 1) => {
 
   if (categories.length == 0) {
     page--;
-    get_all_categories(chatId, page - 1);
     await User.findByIdAndUpdate(
       user._id,
       {...user, action: `category-${page}`},
       {new: true}
     );
+    get_all_categories(chatId, page - 1);
     return;
   }
 
@@ -247,6 +247,20 @@ const remove_category = async (chatId, id) => {
 
 const edit_category = async(chatId, id) => {
   let user = await User.findOne({chatId}).lean() 
+  let category = await Category.findById(id).lean()
+
+  await User.findByIdAndUpdate(user._id, {...user, action: `edit_category-${id}`}, {new: true})
+
+  bot.sendMessage(chatId, `${category.title} turkumiga yangi nom bering`)
+}
+
+const save_categroy = async (chatId, title) => {
+  let user = await User.findOne({chatId}).lean()
+  await User.findByIdAndUpdate(user._id, {new: true, action: 'menu'}, {new: true})
+  let id = user.action.split('-')[1]
+  let category = await Category.findById(id).lean()
+  await Category.findByIdAndUpdate(id, {...category, title}, {new: true})
+  bot.sendMessage(chatId, `Turkum yangilandi!`)
 }
 
 module.exports = {
@@ -256,5 +270,6 @@ module.exports = {
   pagination_category,
   show_category,
   remove_category,
-  edit_category
+  edit_category,
+  save_categroy
 };
