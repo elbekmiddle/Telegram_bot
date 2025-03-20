@@ -1,6 +1,7 @@
 const {bot} = require('./bot')
 const User = require('../model/user') 
-const {add_category, pagination_category, show_category, remove_category, edit_category} = require('./helper/category')  
+const {add_category, pagination_category, show_category, remove_category, edit_category} = require('./helper/category');  
+const {add_product} = require('./helper/product');
 
 bot.on('callback_query', async query => {
     const {data} = query
@@ -25,5 +26,9 @@ bot.on('callback_query', async query => {
     if(data.includes('edit_category-')){
         let id = data.split('-')[1]
         edit_category(chatId, id)
+    }
+    if(data.includes('add_product-')){
+    let id = data.split('-')[1]
+    add_product(chatId, id)
     }
 })

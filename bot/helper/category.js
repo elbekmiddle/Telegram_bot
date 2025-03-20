@@ -14,8 +14,8 @@ get_all_categories = async (chatId, page = 1) => {
     page--;
     await User.findByIdAndUpdate(
       user._id,
-      {...user, action: `category-${page}`},
-      {new: true}
+      { ...user, action: `category-${page}` },
+      { new: true }
     );
     get_all_categories(chatId, page - 1);
     return;
@@ -155,7 +155,7 @@ const show_category = async (chatId, id, page = 1) => {
     [
       {
         text: "Yangi mahsulot qo`shish",
-        callback_data: `add_product_${cateogry._id}`,
+        callback_data: `add_product-${cateogry._id}`,
       },
     ],
     [
@@ -245,23 +245,31 @@ const remove_category = async (chatId, id) => {
   }
 };
 
-const edit_category = async(chatId, id) => {
-  let user = await User.findOne({chatId}).lean() 
-  let category = await Category.findById(id).lean()
+const edit_category = async (chatId, id) => {
+  let user = await User.findOne({ chatId }).lean();
+  let category = await Category.findById(id).lean();
 
-  await User.findByIdAndUpdate(user._id, {...user, action: `edit_category-${id}`}, {new: true})
+  await User.findByIdAndUpdate(
+    user._id,
+    { ...user, action: `edit_category-${id}` },
+    { new: true }
+  );
 
-  bot.sendMessage(chatId, `${category.title} turkumiga yangi nom bering`)
-}
+  bot.sendMessage(chatId, `${category.title} turkumiga yangi nom bering`);
+};
 
 const save_categroy = async (chatId, title) => {
-  let user = await User.findOne({chatId}).lean()
-  await User.findByIdAndUpdate(user._id, {new: true, action: 'menu'}, {new: true})
-  let id = user.action.split('-')[1]
-  let category = await Category.findById(id).lean()
-  await Category.findByIdAndUpdate(id, {...category, title}, {new: true})
-  bot.sendMessage(chatId, `Turkum yangilandi!`)
-}
+  let user = await User.findOne({ chatId }).lean();
+  await User.findByIdAndUpdate(
+    user._id,
+    { new: true, action: "menu" },
+    { new: true }
+  );
+  let id = user.action.split("-")[1];
+  let category = await Category.findById(id).lean();
+  await Category.findByIdAndUpdate(id, { ...category, title }, { new: true });
+  bot.sendMessage(chatId, `Turkum yangilandi!`);
+};
 
 module.exports = {
   get_all_categories,
@@ -271,5 +279,7 @@ module.exports = {
   show_category,
   remove_category,
   edit_category,
-  save_categroy
+  save_categroy,
 };
+
+// 6:00

@@ -10,8 +10,8 @@ const Product = new Schema({
         ref: 'Category'
     },
     status: {
-        type: Boolean,
-        default: true
+        type: Number,
+        default: 0
     }
 })
 
