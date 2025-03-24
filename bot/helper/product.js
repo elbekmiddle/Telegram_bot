@@ -127,14 +127,12 @@ const delete_product = async(chatId, id, sure) => {
   }
 }
 
-
-
 module.exports = {
   add_product,
   add_product_next,
   clear_draft_product,
   show_product,
-  delete_product
+  delete_product,
 };
 
 // 7: 45

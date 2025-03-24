@@ -12,12 +12,12 @@ bot.on('callback_query', async (query) => {
     if (data === 'add_category'){
         add_category(chatId)
     }
-    if(data.includes == 'xarita_order-'){
-        let id = data.split('-')
-        show_location(chatId, id)
-        console.log(id)
-        return
+    if (data.includes('xarita_zakaz-')) {
+        let id = data.split('-')[1]; // ID ni olish
+        show_location(chatId, id);  // Funksiyaga ID ni jo‘natish
+        return;
     }
+    
     if(data.includes('success_order-')){
         let id = data.split('-')
         change_order(chatId, id[1], 2)

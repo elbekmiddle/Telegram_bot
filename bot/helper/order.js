@@ -58,10 +58,11 @@ const end_order = async (chatId, location) =>  {
                 remove_keyboard: true
             }
         })
-        await bot.sendMessage(admin.chatId, `Yangi buyurtma. \nBuyurtmachi: ${user.name}\nmahsulot: ${order.product.title}\nsoni: ${order.count} ta\nUmumiy narhi: ${order.count * order.product.price} so'm`, {
+        await bot.sendMessage(admin.chatId, 
+            `Yangi buyurtma. \nBuyurtmachi: ${user.name}\nMahsulot: ${order.product.title}\nSoni: ${order.count} ta\nUmumiy narx: ${order.count * order.product.price} so'm`,  {
             reply_markup: {
                 inline_keyboard: [
-                    [
+                    [   
                         {
                             text: 'Bekor qilish',
                             callback_data: `cancel_order-${order._id}`
@@ -73,7 +74,7 @@ const end_order = async (chatId, location) =>  {
                     ], [
                         {
                             text: 'Manzilni olish',
-                            callback_data: `xarita_order-${order._id}`
+                            callback_data: `xarita_zakaz-${order._id}`
                         }
                     ]
                 ]
@@ -97,16 +98,22 @@ const change_order = async (chatId, id , status) => {
     }
 }
 
-show_location = async (chatId,_id) => {
-    let user = await User.findOne({chatId}).lean()
+const show_location = async (chatId, _id) => {
+    let user = await User.findOne({ chatId }).lean();
 
-    if(user.admin){
-        let order = await Order.findById(_id).lean()
-        bot.sendLocation(chatId, order.location.latitude, order.location.longitude)  
-    }else{
-        bot.sendMessage(chatId, `Sizga bunday sorov mumkin emas`)
+    if (user?.admin) {
+        let order = await Order.findById(_id).lean();
+        
+        if (order && order.location) {  // Order mavjudligini va location borligini tekshirish
+            bot.sendLocation(chatId, order.location.latitude, order.location.longitude);
+        } else {
+            bot.sendMessage(chatId, "Buyurtma manzili topilmadi yoki hali kiritilmagan.");
+        }
+    } else {
+        bot.sendMessage(chatId, "Sizga bunday so‘rov mumkin emas.");
     }
-}
+};
+
 module.exports = {
     ready_order,
     end_order,
