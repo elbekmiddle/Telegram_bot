@@ -1,6 +1,6 @@
 const TELEGRAM_BOT = require('node-telegram-bot-api')
 
-const bot = new TELEGRAM_BOT(process.env.TOKEN, {
+const bot = new TELEGRAM_BOT(process.env.TELEGRAM_BOT_TOKEN, {
     polling: true
 })
 
