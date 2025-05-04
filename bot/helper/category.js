@@ -244,7 +244,7 @@ const remove_category = async (chatId, id) => {
 
     await Promise.all(
       products.map(async (product) => {
-        await Product.findByIdAndRemove(product._id);
+        await Product.findByIdAndDelete(product._id);
       })
     );
     // await Category.findByIdAndRemove(id)
