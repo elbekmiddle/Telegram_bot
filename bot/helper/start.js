@@ -47,21 +47,60 @@ const start = async (msg) => {
 }
 
 const requestContact = async (msg) => {
-    const chatId = msg.from.id
+	const chatId = msg.from.id
 
-    if(msg.contact.phone_number){
-        let user =  await User.findOne({chatId}).lean()
-        user.phone = msg.contact.phone_number
-        user.admin = msg.contact.phone_number == '+998943968626'
-        user.action = 'menu'
-        await User.findByIdAndUpdate(user._id,user,{new:true})
-        bot.sendMessage(chatId, `Menuni tanlang, ${user.admin ? 'Admin': user.name}`,{
-            reply_markup: {
-                keyboard: user.admin ? adminKeyboard : userKeyboard,
-                resize_keyboard: true
-            },
-        })
-    }
+	// if(msg.contact.phone_number){
+	//     let user =  await User.findOne({chatId}).lean()
+	//     user.phone = msg.contact.phone_number
+	//     // user.admin = msg.contact.phone_number == '+998943968626'
+	//     user.admin = msg.contact.phone_number == process.env.ADMIN_NUMBER
+	//     user.action = 'menu'
+	//     await User.findByIdAndUpdate(user._id,user,{new:true})
+	//     bot.sendMessage(chatId, `Menuni tanlang, ${user.admin ? 'Admin': user.name}`,{
+	//         reply_markup: {
+	//             keyboard: user.admin ? adminKeyboard : userKeyboard,
+	//             resize_keyboard: true
+	//         },
+	//     })
+	// }
+
+	// xavfsiz va toza requestContact bloki
+	if (!msg.contact?.phone_number) {
+		return bot.sendMessage(
+			chatId,
+			'Iltimos tugma orqali telefon raqamingizni yuboring!'
+		)
+	}
+
+	const phone = String(msg.contact.phone_number).replace(/\s+/g, '') // bo'shliqlarni olib tashlash (agar kerak bo'lsa)
+
+	let user = await User.findOne({ chatId })
+
+	if (!user) {
+		// agar user topilmasa, /start ni bosishni so'rash mumkin
+		return bot.sendMessage(
+			chatId,
+			'Foydalanuvchi topilmadi. Iltimos /start bosing va qayta urinib ko‘ring.'
+		)
+	}
+
+	// yangilashni model instance orqali qilamiz — bu toza va ishonchli
+	user.phone = phone
+	user.admin = phone === '+998976637200' // qat'iy tekshiruv (===)
+	user.action = 'menu'
+
+	await user.save() // yoki: await User.findByIdAndUpdate(user._id, user, { new: true });
+
+	bot.sendMessage(
+		chatId,
+		`Menuni tanlang, ${user.admin ? 'Admin' : user.name}`,
+		{
+			reply_markup: {
+				keyboard: user.admin ? adminKeyboard : userKeyboard,
+				resize_keyboard: true,
+			},
+		}
+	)
 }
 
 module.exports = {
